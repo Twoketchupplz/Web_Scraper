@@ -11,7 +11,7 @@ cnt = 0
 opt = Options()
 # opt.add_argument('headless') # 브라우저가 뜨지 않고 실행됨
 opt.add_argument('--blink-settings=imagesEnabled=false')
-s = Service('./BrowserDriver/chromedriver.exe')
+s = Service('../BrowserDriver/chromedriver.exe')
 driver = webdriver.Chrome(service=s, options=opt)
 print("driver ready")
 driver.get(url)
