@@ -13,57 +13,59 @@ opt.add_argument('headless')
 opt.add_argument('--blink-settings=imagesEnabled=false')
 s = Service('../BrowserDriver/chromedriver.exe')
 driver = webdriver.Chrome(service=s, options=opt)
-print("driver ready")
-driver.get(mainPage)
 driver.implicitly_wait(10)
-time.sleep(1)
+
+print("Chrome Driver Ready")
+print()
+driver.get(mainPage)
 
 
-def getNth(prntLiIndex: int):
+def getNth(prntLiIndex: int):  # Get CSS Selector(Nth of Current List Item) after tag
     # index 는 1부터 시작
     return ':nth-of-type(' + str(prntLiIndex) + ')'
 
 
-def getAriaLevel(ariaDepth: int):
+def getAriaLevel(ariaDepth: int):  # Get CSS Selector(Child Li List)
     return ' li[aria-level="' + str(ariaDepth) + '"]'
 
 
 def DFS(prntList: list[WebElement], prntSelector: str, paramListDepth: int):
     li_nth = 1
-    tab: str = '  + ' * (paramListDepth - 1)
+    tab: str = '   ' * (paramListDepth - 1) + '+  '
 
     # print()
-    print(tab + "* * * * * * * * * * * * * * *")
+    print(tab + "* * * * * * * Lv." + str(paramListDepth) + " DFS Start * * * * * * *")
     print(tab + prntSelector)  # cur item List
-    print(tab + "Current Depth:" + str(paramListDepth))
-    print(tab + "size: " + str(len(prntList)))
+    print(tab + "List size: " + str(len(prntList)))
 
     for li in prntList:
         # get anchor
         trg_anchor = li.find_element(By.TAG_NAME, value='a')
         webdriver.ActionChains(driver).double_click(trg_anchor).perform()
-        # time.sleep(1.1)
 
         # get nth List Item
         nth_li_elmt = driver.find_element(By.CSS_SELECTOR, value=prntSelector + getNth(li_nth))
-        # if "jstree-leaf" in prntList[idx].get_attribute('class'):  # leaf 노드인 경우
         if 'jstree-leaf' in nth_li_elmt.get_attribute('class'):
             # Get Right Contents(leaf format)
-            print(tab + '-+- ' + str(li_nth) + '. ' + trg_anchor.text)  # print a
-            pass
+            print(tab + '- ' + str(li_nth) + '. ' + trg_anchor.text)  # print a
+            li_nth = li_nth + 1
+            continue
         else:
-            print()
-            print(tab + "aria-level: " + nth_li_elmt.get_attribute('aria-level'))
-            print(tab + "parent node")
+            # print(tab + "aria-level: " + nth_li_elmt.get_attribute('aria-level'))
+
             # Get Right Contents
-            # nth Li의 depth+1노드를 찾는다. li[aria-level='depth']/:nth-of-type('nth')/ li[aria-level='depth+1']
             print(tab + str(li_nth) + '. ' + trg_anchor.text)  # print a
 
             next_selector: str = prntSelector + getNth(li_nth) + getAriaLevel(paramListDepth + 1)
             childList = driver.find_elements(By.CSS_SELECTOR, value=next_selector)
             DFS(childList, next_selector, paramListDepth + 1)
-        li_nth = li_nth + 1
+            li_nth = li_nth + 1
 
+        print("* * * * * * * LV." + str(paramListDepth) + " DFS End * * * * * * *")
+
+
+# def ChooseDropDownMenu:  # ul.dropdown-menu
+#     return
 
 DFS(driver.find_elements(By.CSS_SELECTOR, value='#tree li[aria-level="1"]'), '#tree li[aria-level="1"]', 1)
 
