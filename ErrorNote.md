@@ -29,12 +29,19 @@ driver = webdriver.Chorme(service=s, option=opt)
 
 
 ## 현상
+- *selenium.common.exceptions.StaleElementReferenceException: Message: stale element reference*
 - 같은 코드임에도 매번 Run 결과가 랜덤함
 - 정상 동작, 에러 발생(실행x, 실행 되나 잘못된 Interaction)
 
-## 이유(추측)
-- 브라우저가 조작될 충분한 시간을 주어야함
+## 이유
+- 웹 엘리먼트 로딩이 길어져(네트워크 지연, 액션 시간 등) 미쳐 로딩하지 못한 엘리먼트를 찾으려 했음
 
-## 해결?
-- `time.sleep(1)`
-- url, element 가져오거나, 브라우저 조작 전후로 충분한 시간을 확보 
+## 해결
+- 대기시간을 부여
+  - 묵시적 대기시간(Implicit wait time)
+    - 전체 웹 엘리먼트에 동일한 타임아웃 시간을 설정
+  - 명시적 대기시간(Explicit wait time)
+    - 특정 엘리먼트에 대해서만 타임아웃 시간 설정
+    - 특수하게 긴 시간이 필요한 경우 사용
+  - `time.sleep(sec)`
+    - 고정적인 타임아웃 시간(강제)
