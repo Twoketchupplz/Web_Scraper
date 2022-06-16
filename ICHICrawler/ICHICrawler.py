@@ -7,6 +7,10 @@ from selenium.webdriver.common.by import By
 from openpyxl import Workbook
 
 
+# TODO: UnexpectedAlertPresentException: Alert Text: Error: Generic error; Means: ; Target: AV1 - 1; Action: 3-Managing > TE; No data found!
+# ERROR: Alert Text: Ajax..
+
+
 def getNth(prnt_li_index: int):  # Get CSS Selector(Nth of Current List Item) after tag
     # index 는 1부터 시작
     return ':nth-of-type(' + str(prnt_li_index) + ')'
@@ -23,14 +27,14 @@ def getWorkbook(sheet_name: str):
     return work_book, work_sheet
 
 
-def clickMenu(btn_menu: WebElement, menu: str):  # menu: Interventions, Target, Action, Means, ExtensionCodes
+def clickMenu(btn_menu: WebElement, target_menu: str):  # menu: Interventions, Target, Action, Means, ExtensionCodes
     if 'open' not in btn_menu.get_attribute('class'):  # 아직 열리지 않은 메뉴인 경우 클릭
         webdriver.ActionChains(driver).click(btn_menu).perform()
 
-    trg_menu = btn_menu.find_element(By.CSS_SELECTOR, value='li[data-tsel="' + menu + '"]')
+    trg_menu = btn_menu.find_element(By.CSS_SELECTOR, value='li[data-tsel="' + target_menu + '"]')
 
     webdriver.ActionChains(driver).click(trg_menu).perform()
-    print("Menu " + menu + " Clicked")
+    print("Menu " + target_menu + " Clicked")
 
 
 def getFieldList(key):  # key: Interventions, Target, Action, Means, ExtensionCodes
@@ -82,21 +86,24 @@ def appendRecord(tr_tuple: tuple[WebElement]):
 
 
 def DFS(prnt_tuple: tuple[WebElement], prnt_selector: str, prnt_depth: int):
-    global wb
+    global wb, xlsx_file_name
     li_nth = 1
     tab: str = '   ' * (prnt_depth - 1) + '+  '
 
     # print(tab + "* * * * * * * Lv." + str(prnt_depth) + " DFS Start * * * * * * *")
     # print(tab + prnt_selector)  # cur item List
-    # print(tab + "List size: " + str(len(prnt_tuple)))
 
     for li in prnt_tuple:
         # get anchor
         trg_anchor = li.find_element(By.TAG_NAME, value='a')
-        webdriver.ActionChains(driver).double_click(trg_anchor).perform()
-
-        # get nth List Item
-        nth_li_elmt = driver.find_element(By.CSS_SELECTOR, value=prnt_selector + getNth(li_nth))
+        if trg_anchor == '#':  # TODO try 해서 경고문이 뜨면 catch 알려주고 넘어간다
+            print("No Data Found!")
+            li_nth = li_nth + 1
+            continue
+        else:
+            webdriver.ActionChains(driver).double_click(trg_anchor).perform()
+            # get nth List Item
+            nth_li_elmt = driver.find_element(By.CSS_SELECTOR, value=prnt_selector + getNth(li_nth))
         if 'jstree-leaf' in nth_li_elmt.get_attribute('class'):
             # Get Right Contents(leaf format)
             print(tab + '- ' + str(li_nth) + '. ' + trg_anchor.text)  # print a
@@ -119,15 +126,16 @@ def DFS(prnt_tuple: tuple[WebElement], prnt_selector: str, prnt_depth: int):
 
             li_nth = li_nth + 1
 
-        wb.save("ICHI_Beta_3.xlsx")
+        wb.save(xlsx_file_name)
 
 
 # Workbook
-menu = 'Means'  # set menu
+menu = 'Action'  # set menu
+xlsx_file_name = 'ICHI_Beta_3_' + menu + '.xlsx'
 wb, ws, f_dict = setWorkBook(sheet_name=menu)
 
-# 파일이 이미 있다면 다음 번호로..
-wb.save("ICHI_Beta_3_Mns.xlsx")
+# TODO 파일 이름 새로 지정; 실수로 덮어쓰지 않도록 해야함; 저장 메서드 만들기;
+wb.save(filename=xlsx_file_name)
 
 # Web Crawling
 mainPage = 'https://mitel.dimi.uniud.it/ichi/'
@@ -143,7 +151,7 @@ print("Chrome Driver Ready")
 print()
 driver.get(mainPage)
 
-clickMenu(driver.find_element(By.CSS_SELECTOR, value='#dropdown-tsel'), menu=menu)
+clickMenu(driver.find_element(By.CSS_SELECTOR, value='#dropdown-tsel'), target_menu=menu)
 
 DFS(tuple(driver.find_elements(By.CSS_SELECTOR, value='#tree li[aria-level="1"]')), '#tree li[aria-level="1"]', 1)
-wb.save("ICHI_Beta_3.xlsx")
+wb.save(filename=xlsx_file_name)
