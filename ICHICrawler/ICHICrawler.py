@@ -7,7 +7,9 @@ from selenium.webdriver.common.by import By
 from openpyxl import Workbook
 
 
-# TODO: UnexpectedAlertPresentException: Alert Text: Error: Generic error; Means: ; Target: AV1 - 1; Action: 3-Managing > TE; No data found!
+# TODO: UnexpectedAlertPresentException
+# Alert Text: Error: Generic error; Means: ; Target: AV1 - 1; Action: 3-Managing > TE; No data found!
+
 # ERROR: Alert Text: Ajax..
 
 
@@ -96,7 +98,7 @@ def DFS(prnt_tuple: tuple[WebElement], prnt_selector: str, prnt_depth: int):
     for li in prnt_tuple:
         # get anchor
         trg_anchor = li.find_element(By.TAG_NAME, value='a')
-        if trg_anchor == '#':  # TODO try 해서 경고문이 뜨면 catch 알려주고 넘어간다
+        if trg_anchor == '#':  # TODO
             print("No Data Found!")
             li_nth = li_nth + 1
             continue
@@ -130,7 +132,7 @@ def DFS(prnt_tuple: tuple[WebElement], prnt_selector: str, prnt_depth: int):
 
 
 # Workbook
-menu = 'Action'  # set menu
+menu = 'Interventions'  # set menu
 xlsx_file_name = 'ICHI_Beta_3_' + menu + '.xlsx'
 wb, ws, f_dict = setWorkBook(sheet_name=menu)
 
