@@ -9,6 +9,7 @@
 - 동적 웹페이지 트리 형태의 데이터를 수집, 엑셀파일로 저장
 - 데이터: [ICHI Beta-3](https://mitel.dimi.uniud.it/ichi/ "International Classification of Health Interventions")의 Right Content
     - 5개 항목 Interventions, Target, Action, Means, ExtensionCodes
+    - 항목별로 7천 ~ 1만여개의 Record를 추출
   
 - 포맷은 교수의 요구사항대로 제작
 
