@@ -4,7 +4,10 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
+from selenium.common import exceptions
 from openpyxl import Workbook
+import time
+import traceback
 
 
 # TODO: UnexpectedAlertPresentException
@@ -95,44 +98,66 @@ def DFS(prnt_tuple: tuple[WebElement], prnt_selector: str, prnt_depth: int):
     # print(tab + "* * * * * * * Lv." + str(prnt_depth) + " DFS Start * * * * * * *")
     # print(tab + prnt_selector)  # cur item List
 
-    for li in prnt_tuple:
-        # get anchor
-        trg_anchor = li.find_element(By.TAG_NAME, value='a')
-        if trg_anchor == '#':  # TODO
-            print("No Data Found!")
-            li_nth = li_nth + 1
-            continue
-        else:
-            webdriver.ActionChains(driver).double_click(trg_anchor).perform()
+    for li in prnt_tuple: # TODO 여기서 예외 발생시 다시 시작가능하다면..
+        try:
+            # get anchor
+            try:
+                trg_anchor = li.find_element(By.TAG_NAME, value='a')
+            except exceptions.UnexpectedAlertPresentException as e:
+                # TODO: Consult with Prof; inform to excel: No Data;
+                print(traceback.format_exc())
+                print(e)
+                try:
+                    # FixMe: alert를 찾지 못함
+                    result = driver.switch_to.alert  # excepts.NoAlertPresentException
+                    result.accept()
+                    time.sleep(1)
+                    print("accept complete")
+                except exceptions.NoAlertPresentException as e:
+                    print(traceback.format_exc())
+                    print(e)
+                    print("retry...")
+                trg_anchor = li.find_element(By.TAG_NAME, value='a')
+                webdriver.ActionChains(driver).double_click(trg_anchor).perform()
+            else:
+                webdriver.ActionChains(driver).double_click(trg_anchor).perform()
+
             # get nth List Item
             nth_li_elmt = driver.find_element(By.CSS_SELECTOR, value=prnt_selector + getNth(li_nth))
-        if 'jstree-leaf' in nth_li_elmt.get_attribute('class'):
-            # Get Right Contents(leaf format)
-            print(tab + '- ' + str(li_nth) + '. ' + trg_anchor.text)  # print a
+            if 'jstree-leaf' in nth_li_elmt.get_attribute('class'):
+                # Get Right Contents(leaf format)
+                print(tab + '- ' + str(li_nth) + '. ' + trg_anchor.text)  # print a
 
-            tr_tpl = tuple(driver.find_elements(By.CSS_SELECTOR, value="#content tbody > tr"))
-            appendRecord(tr_tpl)
+                tr_tpl = tuple(driver.find_elements(By.CSS_SELECTOR, value="#content tbody > tr"))
+                appendRecord(tr_tpl)
 
-            li_nth = li_nth + 1
-            continue
-        else:
-            # Get Right Contents
-            print(tab + str(li_nth) + '. ' + trg_anchor.text)  # print a; step 2~6
+                li_nth = li_nth + 1
+                continue
+            else:
+                # Get Right Contents
+                print(tab + str(li_nth) + '. ' + trg_anchor.text)  # print a; step 2~6
 
-            tr_tpl = tuple(driver.find_elements(By.CSS_SELECTOR, value="#content tbody > tr"))
-            appendRecord(tr_tpl)
+                tr_tpl = tuple(driver.find_elements(By.CSS_SELECTOR, value="#content tbody > tr"))
+                appendRecord(tr_tpl)
 
-            next_selector: str = prnt_selector + getNth(li_nth) + getAriaLevel(prnt_depth + 1)
-            child_tpl = tuple(driver.find_elements(By.CSS_SELECTOR, value=next_selector))
-            DFS(child_tpl, next_selector, prnt_depth + 1)
+                next_selector: str = prnt_selector + getNth(li_nth) + getAriaLevel(prnt_depth + 1)
+                child_tpl = tuple(driver.find_elements(By.CSS_SELECTOR, value=next_selector))
+                DFS(child_tpl, next_selector, prnt_depth + 1)
 
-            li_nth = li_nth + 1
+                li_nth = li_nth + 1
+
+        except exceptions.StaleElementReferenceException as e:
+            print("Stale Element Reference Exception, so we passed")
+            print(traceback.format_exc())
+            print(e)
+            pass
+
 
         wb.save(xlsx_file_name)
 
 
 # Workbook
-menu = 'Interventions'  # set menu
+menu = 'Target'  # set menu
 xlsx_file_name = 'ICHI_Beta_3_' + menu + '.xlsx'
 wb, ws, f_dict = setWorkBook(sheet_name=menu)
 
