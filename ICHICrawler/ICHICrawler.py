@@ -1,5 +1,4 @@
 from selenium import webdriver
-# 공식홈페이지 Documentation 에도 ChromeOptions()가 적혀있지만 안된다
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.remote.webelement import WebElement
@@ -95,32 +94,19 @@ def DFS(prnt_tuple: tuple[WebElement], prnt_selector: str, prnt_depth: int):
     li_nth = 1
     tab: str = '   ' * (prnt_depth - 1) + '+  '
 
-    # print(tab + "* * * * * * * Lv." + str(prnt_depth) + " DFS Start * * * * * * *")
-    # print(tab + prnt_selector)  # cur item List
-
-    for li in prnt_tuple: # TODO 여기서 예외 발생시 다시 시작가능하다면..
+    for li in prnt_tuple:
         try:
-            # get anchor
             try:
-                trg_anchor = li.find_element(By.TAG_NAME, value='a')
-            except exceptions.UnexpectedAlertPresentException as e:
-                # TODO: Consult with Prof; inform to excel: No Data;
-                print(traceback.format_exc())
-                print(e)
-                try:
-                    # FixMe: alert를 찾지 못함
-                    result = driver.switch_to.alert  # excepts.NoAlertPresentException
-                    result.accept()
-                    time.sleep(1)
-                    print("accept complete")
-                except exceptions.NoAlertPresentException as e:
-                    print(traceback.format_exc())
-                    print(e)
-                    print("retry...")
-                trg_anchor = li.find_element(By.TAG_NAME, value='a')
-                webdriver.ActionChains(driver).double_click(trg_anchor).perform()
-            else:
-                webdriver.ActionChains(driver).double_click(trg_anchor).perform()
+                result = driver.switch_to.alert
+                result.accept()
+                print("accepted")
+                time.sleep(3)
+            except exceptions.NoAlertPresentException as e:
+                pass
+
+            # get anchor
+            trg_anchor = li.find_element(By.TAG_NAME, value='a')
+            webdriver.ActionChains(driver).double_click(trg_anchor).perform()
 
             # get nth List Item
             nth_li_elmt = driver.find_element(By.CSS_SELECTOR, value=prnt_selector + getNth(li_nth))
@@ -135,7 +121,7 @@ def DFS(prnt_tuple: tuple[WebElement], prnt_selector: str, prnt_depth: int):
                 continue
             else:
                 # Get Right Contents
-                print(tab + str(li_nth) + '. ' + trg_anchor.text)  # print a; step 2~6
+                print(tab + str(li_nth) + '. ' + trg_anchor.text)
 
                 tr_tpl = tuple(driver.find_elements(By.CSS_SELECTOR, value="#content tbody > tr"))
                 appendRecord(tr_tpl)
@@ -152,12 +138,11 @@ def DFS(prnt_tuple: tuple[WebElement], prnt_selector: str, prnt_depth: int):
             print(e)
             pass
 
-
         wb.save(xlsx_file_name)
 
 
 # Workbook
-menu = 'Target'  # set menu
+menu = 'Action'  # set menu
 xlsx_file_name = 'ICHI_Beta_3_' + menu + '.xlsx'
 wb, ws, f_dict = setWorkBook(sheet_name=menu)
 
@@ -174,6 +159,8 @@ s = Service('../BrowserDriver/chromedriver.exe')
 driver = webdriver.Chrome(service=s, options=opt)
 driver.implicitly_wait(20)
 
+start_time = time.time()
+
 print("Chrome Driver Ready")
 print()
 driver.get(mainPage)
@@ -182,3 +169,12 @@ clickMenu(driver.find_element(By.CSS_SELECTOR, value='#dropdown-tsel'), target_m
 
 DFS(tuple(driver.find_elements(By.CSS_SELECTOR, value='#tree li[aria-level="1"]')), '#tree li[aria-level="1"]', 1)
 wb.save(filename=xlsx_file_name)
+
+end_time = time.time()
+print(time.strftime('%c', time.localtime(start_time)))
+print(time.strftime('%c', time.localtime(end_time)))
+
+elapsed_time = int((end_time - start_time))
+tm_hr, remainder = divmod(elapsed_time, 3600)
+tm_min = remainder // 60
+print('Elapsed: {hour}h {minute}m'.format(hour=tm_hr, minute=tm_min))
